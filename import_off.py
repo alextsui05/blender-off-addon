@@ -26,6 +26,7 @@ from bpy.props import (BoolProperty,
     StringProperty,
     )
 from bpy_extras.io_utils import (ImportHelper,
+    ExportHelper,
     unpack_list,
     unpack_face_list,
     )
@@ -50,7 +51,6 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
     """Load an OFF Mesh file"""
     bl_idname = "import_mesh.off"
     bl_label = "Import OFF Mesh"
-
     filename_ext = ".off"
     filter_glob = StringProperty(
         default="*.off",
@@ -74,16 +74,35 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
+class ExportOFF(bpy.types.Operator, ExportHelper):
+    """Save an OFF Mesh file"""
+    bl_idname = "export_mesh.off"
+    bl_label = "Export OFF Mesh"
+    filter_glob = StringProperty(
+        default="*.off",
+        options={'HIDDEN'},
+    )
+    check_extension = True
+    filename_ext = ".off"
+
+    def execute(self, context):
+        return save(self, context, self.filepath)
+
 def menu_func_import(self, context):
     self.layout.operator(ImportOFF.bl_idname, text="OFF Mesh (.off)")
+
+def menu_func_export(self, context):
+    self.layout.operator(ExportOFF.bl_idname, text="OFF Mesh (.off)")
 
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_export.append(menu_func_export)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
 def load(operator, context, filepath):
     # Parse mesh from OFF file
@@ -117,6 +136,35 @@ def load(operator, context, filepath):
     mesh.update()
 
     return mesh
+
+def save(operator, context, filepath):
+    # Export the selected mesh
+    APPLY_MODIFIERS = False # TODO: Make this configurable
+    scene = context.scene
+    obj = scene.objects.active
+    mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+    verts = mesh.vertices[:]
+    facets = [ f for f in mesh.tessfaces ]
+
+    # Write geometry to file
+    filepath = os.fsencode(filepath)
+    fp = open(filepath, 'w')
+
+    fp.write('OFF\n')
+    fp.write('%d %d 0\n' % (len(verts), len(facets)))
+
+    for vert in verts:
+        fp.write('%.16f %.16f %.16f\n' % vert.co[:])
+
+    for facet in facets:
+        fp.write('%d' % len(facet.vertices))
+        for vid in facet.vertices:
+            fp.write(' %d' % vid)
+        fp.write('\n')
+
+    fp.close()
+
+    return {'FINISHED'}
 
 if __name__ == "__main__":
     register()
