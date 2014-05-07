@@ -113,15 +113,25 @@ def load(operator, context, filepath):
     vcount, fcount, ecount = [int(x) for x in file.readline().split()]
     verts = []
     facets = []
-    for i in range(0, vcount):
+    i=0;
+    while i<vcount:
         line = file.readline()
-        px, py, pz = [float(x) for x in line.split()]
+        try:
+            px, py, pz = [float(x) for x in line.split()]
+        except ValueError:
+            continue
         verts.append((px, py, pz))
+        i=i+1
 
-    for i in range(0, fcount):
+    i=0;
+    while i<fcount:
         line = file.readline()
-        unused, vid1, vid2, vid3 = [int(x) for x in line.split()]
+        try:
+            unused, vid1, vid2, vid3 = [int(x) for x in line.split()]
+        except ValueError:
+            continue
         facets.append((vid1, vid2, vid3))
+        i=i+1
 
     # Assemble mesh
     off_name = bpy.path.display_name_from_filepath(filepath)
