@@ -12,6 +12,19 @@ Quickstart
 6. Check the checkbox by the OFF addon to enable it.
 7. Now you should have new import/export menu items to work with OFF files.
 
+License
+-----
+
+This addon is licensed under Apache 2.0.
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Links
+-----
+
+Blender Wiki page: http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Object_File_Format_%28.off%29
+
+
 Developer notes
 -----
 
