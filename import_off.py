@@ -1,45 +1,48 @@
 #####
 #
 # Copyright 2014 Alex Tsui
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 #####
 
-# 
+#
 # http://wiki.blender.org/index.php/Dev:2.5/Py/Scripts/Guidelines/Addons
 #
 import os
 import bpy
+import mathutils
 from bpy.props import (BoolProperty,
     FloatProperty,
     StringProperty,
+    EnumProperty,
     )
 from bpy_extras.io_utils import (ImportHelper,
     ExportHelper,
     unpack_list,
     unpack_face_list,
+    axis_conversion,
     )
 
 #if "bpy" in locals():
 #    import imp
-#    if "import_off" in 
+#    if "import_off" in
 
 bl_info = {
     "name": "OFF format",
     "description": "Import-Export OFF, Import OFF mesh only, for now.",
     "author": "Alex Tsui",
-    "version": (0, 1),
+    "version": (0, 2),
     "blender": (2, 69, 0),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
@@ -57,12 +60,41 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
+    axis_forward = EnumProperty(
+            name="Forward",
+            items=(('X', "X Forward", ""),
+                   ('Y', "Y Forward", ""),
+                   ('Z', "Z Forward", ""),
+                   ('-X', "-X Forward", ""),
+                   ('-Y', "-Y Forward", ""),
+                   ('-Z', "-Z Forward", ""),
+                   ),
+            default='-Z',
+            )
+    axis_up = EnumProperty(
+            name="Up",
+            items=(('X', "X Up", ""),
+                   ('Y', "Y Up", ""),
+                   ('Z', "Z Up", ""),
+                   ('-X', "-X Up", ""),
+                   ('-Y', "-Y Up", ""),
+                   ('-Z', "-Z Up", ""),
+                   ),
+            default='Y',
+            )
+
     def execute(self, context):
         #from . import import_off
 
-        keywords = self.as_keywords()
+        keywords = self.as_keywords(ignore=('axis_forward',
+            'axis_up',
+            'filter_glob',
+        ))
+        global_matrix = axis_conversion(from_forward=self.axis_forward,
+            from_up=self.axis_up,
+            ).to_4x4()
 
-        mesh = load(self, context, self.filepath)
+        mesh = load(self, context, **keywords)
         if not mesh:
             return {'CANCELLED'}
 
@@ -71,6 +103,10 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
         scene.objects.link(obj)
         scene.objects.active = obj
         obj.select = True
+
+        obj.matrix_world = global_matrix
+
+        scene.update()
 
         return {'FINISHED'}
 
@@ -85,8 +121,40 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
     check_extension = True
     filename_ext = ".off"
 
+    axis_forward = EnumProperty(
+            name="Forward",
+            items=(('X', "X Forward", ""),
+                   ('Y', "Y Forward", ""),
+                   ('Z', "Z Forward", ""),
+                   ('-X', "-X Forward", ""),
+                   ('-Y', "-Y Forward", ""),
+                   ('-Z', "-Z Forward", ""),
+                   ),
+            default='-Z',
+            )
+    axis_up = EnumProperty(
+            name="Up",
+            items=(('X', "X Up", ""),
+                   ('Y', "Y Up", ""),
+                   ('Z', "Z Up", ""),
+                   ('-X', "-X Up", ""),
+                   ('-Y', "-Y Up", ""),
+                   ('-Z', "-Z Up", ""),
+                   ),
+            default='Y',
+            )
+
     def execute(self, context):
-        return save(self, context, self.filepath)
+        keywords = self.as_keywords(ignore=('axis_forward',
+            'axis_up',
+            'filter_glob',
+            'check_existing',
+        ))
+        global_matrix = axis_conversion(to_forward=self.axis_forward,
+            to_up=self.axis_up,
+            ).to_4x4()
+        keywords['global_matrix'] = global_matrix
+        return save(self, context, **keywords)
 
 def menu_func_import(self, context):
     self.layout.operator(ImportOFF.bl_idname, text="OFF Mesh (.off)")
@@ -147,12 +215,20 @@ def load(operator, context, filepath):
 
     return mesh
 
-def save(operator, context, filepath):
+def save(operator, context, filepath,
+    global_matrix = None):
     # Export the selected mesh
-    APPLY_MODIFIERS = False # TODO: Make this configurable
+    APPLY_MODIFIERS = True # TODO: Make this configurable
+    if global_matrix is None:
+        global_matrix = mathutils.Matrix()
     scene = context.scene
     obj = scene.objects.active
     mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+
+    # Apply the inverse transformation
+    obj_mat = obj.matrix_world
+    mesh.transform(global_matrix * obj_mat)
+
     verts = mesh.vertices[:]
     facets = [ f for f in mesh.tessfaces ]
 
