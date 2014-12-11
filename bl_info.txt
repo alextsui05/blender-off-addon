@@ -4,7 +4,7 @@
 
 bl_info = {
     "name": "My Script",
-    "description": "Import-Export OFF, Import OFF mesh only, for now.",
+    "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui",
     "version": (0, 1),
     "blender": (2, 69, 0),

@@ -40,7 +40,7 @@ from bpy_extras.io_utils import (ImportHelper,
 
 bl_info = {
     "name": "OFF format",
-    "description": "Import-Export OFF, Import OFF mesh only, for now.",
+    "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui",
     "version": (0, 2),
     "blender": (2, 69, 0),
