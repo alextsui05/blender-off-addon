@@ -41,9 +41,9 @@ from bpy_extras.io_utils import (ImportHelper,
 bl_info = {
     "name": "OFF format",
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
-    "author": "Alex Tsui",
-    "version": (0, 2),
-    "blender": (2, 69, 0),
+    "author": "Alex Tsui, Mateusz Kłoczko",
+    "version": (0, 3),
+    "blender": (2, 74, 0),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"
@@ -181,12 +181,14 @@ def load(operator, context, filepath):
     vcount, fcount, ecount = [int(x) for x in file.readline().split()]
     verts = []
     facets = []
+    edges = []
     i=0;
     while i<vcount:
         line = file.readline()
         try:
             px, py, pz = [float(x) for x in line.split()]
         except ValueError:
+            i=i+1
             continue
         verts.append((px, py, pz))
         i=i+1
@@ -195,20 +197,26 @@ def load(operator, context, filepath):
     while i<fcount:
         line = file.readline()
         try:
-            unused, vid1, vid2, vid3 = [int(x) for x in line.split()]
+            splitted  = line.split()
+            ids   = list(map(int, splitted))
+            if len(ids) > 3:
+                facets.append(tuple(ids[1:]))
+            elif len(ids) == 3:
+                edges.append(tuple(ids[1:]))
         except ValueError:
+            i=i+1
             continue
-        facets.append((vid1, vid2, vid3))
         i=i+1
 
     # Assemble mesh
     off_name = bpy.path.display_name_from_filepath(filepath)
     mesh = bpy.data.meshes.new(name=off_name)
-    mesh.vertices.add(len(verts))
-    mesh.vertices.foreach_set("co", unpack_list(verts))
+    mesh.from_pydata(verts,edges,facets)
+    # mesh.vertices.add(len(verts))
+    # mesh.vertices.foreach_set("co", unpack_list(verts))
 
-    mesh.tessfaces.add(len(facets))
-    mesh.tessfaces.foreach_set("vertices_raw", unpack_face_list(facets))
+    # mesh.faces.add(len(facets))
+    # mesh.faces.foreach_set("vertices", unpack_face_list(facets))
 
     mesh.validate()
     mesh.update()
