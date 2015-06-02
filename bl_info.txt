@@ -3,11 +3,11 @@
 #
 
 bl_info = {
-    "name": "My Script",
+    "name": "Import-Export OFF",
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
-    "author": "Alex Tsui",
-    "version": (0, 1),
-    "blender": (2, 69, 0),
+    "author": "Alex Tsui, Mateusz Kłoczko",
+    "version": (0, 2),
+    "blender": (2, 74, 0),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"
