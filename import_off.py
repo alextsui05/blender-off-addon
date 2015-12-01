@@ -143,6 +143,11 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
                    ),
             default='Y',
             )
+    use_colors = BoolProperty(
+            name="Vertex Colors",
+            description="Export the active vertex color layer",
+            default=False,
+            )
 
     def execute(self, context):
         keywords = self.as_keywords(ignore=('axis_forward',
@@ -224,7 +229,8 @@ def load(operator, context, filepath):
     return mesh
 
 def save(operator, context, filepath,
-    global_matrix = None):
+    global_matrix = None,
+    use_colors = False):
     # Export the selected mesh
     APPLY_MODIFIERS = True # TODO: Make this configurable
     if global_matrix is None:
@@ -239,18 +245,44 @@ def save(operator, context, filepath,
 
     verts = mesh.vertices[:]
     facets = [ f for f in mesh.tessfaces ]
+    # Collect colors by vertex id
+    colors = False
+    vertex_colors = None
+    if use_colors:
+        colors = mesh.tessface_vertex_colors.active
+    if colors:
+        colors = colors.data
+        vertex_colors = {}
+        for i, facet in enumerate(mesh.tessfaces):
+            color = colors[i]
+            color = color.color1[:], color.color2[:], color.color3[:], color.color4[:]
+            for j, vidx in enumerate(facet.vertices):
+                if vidx not in vertex_colors:
+                    vertex_colors[vidx] = (int(color[j][0] * 255.0),
+                                            int(color[j][1] * 255.0),
+                                            int(color[j][2] * 255.0))
+    else:
+        use_colors = False
 
     # Write geometry to file
     filepath = os.fsencode(filepath)
     fp = open(filepath, 'w')
 
-    fp.write('OFF\n')
+    if use_colors:
+        fp.write('COFF\n')
+    else:
+        fp.write('OFF\n')
+
     fp.write('%d %d 0\n' % (len(verts), len(facets)))
 
-    for vert in verts:
-        fp.write('%.16f %.16f %.16f\n' % vert.co[:])
+    for i, vert in enumerate(mesh.vertices):
+        fp.write('%.16f %.16f %.16f' % vert.co[:])
+        if use_colors:
+            fp.write(' %d %d %d 1.0' % vertex_colors[i])
+        fp.write('\n')
 
-    for facet in facets:
+    #for facet in facets:
+    for i, facet in enumerate(mesh.tessfaces):
         fp.write('%d' % len(facet.vertices))
         for vid in facet.vertices:
             fp.write(' %d' % vid)
