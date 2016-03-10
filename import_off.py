@@ -69,7 +69,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
                    ('-Y', "-Y Forward", ""),
                    ('-Z', "-Z Forward", ""),
                    ),
-            default='-Z',
+            default='Y',
             )
     axis_up = EnumProperty(
             name="Up",
@@ -80,7 +80,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
                    ('-Y', "-Y Up", ""),
                    ('-Z', "-Z Up", ""),
                    ),
-            default='Y',
+            default='Z',
             )
 
     def execute(self, context):
@@ -130,7 +130,7 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
                    ('-Y', "-Y Forward", ""),
                    ('-Z', "-Z Forward", ""),
                    ),
-            default='-Z',
+            default='Y',
             )
     axis_up = EnumProperty(
             name="Up",
@@ -141,7 +141,7 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
                    ('-Y', "-Y Up", ""),
                    ('-Z', "-Z Up", ""),
                    ),
-            default='Y',
+            default='Z',
             )
     use_colors = BoolProperty(
             name="Vertex Colors",
@@ -182,7 +182,9 @@ def load(operator, context, filepath):
     # TODO: Add support for NOFF and COFF
     filepath = os.fsencode(filepath)
     file = open(filepath, 'r')
-    file.readline()
+    first_line = file.readline().rstrip()
+    use_colors = (first_line == 'COFF')
+    colors = []
     vcount, fcount, ecount = [int(x) for x in file.readline().split()]
     verts = []
     facets = []
@@ -191,7 +193,13 @@ def load(operator, context, filepath):
     while i<vcount:
         line = file.readline()
         try:
-            px, py, pz = [float(x) for x in line.split()]
+             bits = [float(x) for x in line.split()]
+             px = bits[0]
+             py = bits[1]
+             pz = bits[2]
+             if use_colors:
+                 colors.append([float(bits[3]) / 255, float(bits[4]) / 255, float(bits[5]) / 255])
+
         except ValueError:
             i=i+1
             continue
@@ -225,6 +233,12 @@ def load(operator, context, filepath):
 
     mesh.validate()
     mesh.update()
+
+    if use_colors:
+        color_data = mesh.vertex_colors.new()
+        for i, facet in enumerate(mesh.polygons):
+            for j, vidx in enumerate(facet.vertices):
+                color_data.data[3*i + j].color = colors[vidx]
 
     return mesh
 
