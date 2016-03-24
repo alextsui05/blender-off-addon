@@ -192,6 +192,8 @@ def load(operator, context, filepath):
     i=0;
     while i<vcount:
         line = file.readline()
+        if line.isspace():
+            continue    # skip empty lines
         try:
              bits = [float(x) for x in line.split()]
              px = bits[0]
@@ -209,6 +211,8 @@ def load(operator, context, filepath):
     i=0;
     while i<fcount:
         line = file.readline()
+        if line.isspace():
+            continue    # skip empty lines
         try:
             splitted  = line.split()
             ids   = list(map(int, splitted))
