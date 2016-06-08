@@ -292,7 +292,7 @@ def save(operator, context, filepath,
     for i, vert in enumerate(mesh.vertices):
         fp.write('%.16f %.16f %.16f' % vert.co[:])
         if use_colors:
-            fp.write(' %d %d %d 1.0' % vertex_colors[i])
+            fp.write(' %d %d %d 255' % vertex_colors[i])
         fp.write('\n')
 
     #for facet in facets:
