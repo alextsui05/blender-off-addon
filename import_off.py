@@ -56,7 +56,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
     bl_label = "Import OFF Mesh"
     filename_ext = ".off"
     filter_glob = StringProperty(
-        default="*.off",
+        default="*.off;*.noff;*.coff",
         options={'HIDDEN'},
     )
 
@@ -148,6 +148,11 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
             description="Export the active vertex color layer",
             default=False,
             )
+    use_normals = BoolProperty(
+            name="Normals",
+            description="Export the normals",
+            default=False,
+            )
 
     def execute(self, context):
         keywords = self.as_keywords(ignore=('axis_forward',
@@ -184,11 +189,13 @@ def load(operator, context, filepath):
     file = open(filepath, 'r')
     first_line = file.readline().rstrip()
     use_colors = (first_line == 'COFF')
+    use_normals = (first_line == 'NOFF')
     colors = []
     vcount, fcount, ecount = [int(x) for x in file.readline().split()]
     verts = []
     facets = []
     edges = []
+    normals = []
     i=0;
     while i<vcount:
         line = file.readline()
@@ -199,6 +206,11 @@ def load(operator, context, filepath):
              px = bits[0]
              py = bits[1]
              pz = bits[2]
+             if use_normals:
+                 nx = bits[3]
+                 ny = bits[4]
+                 nz = bits[5]
+                 normals.append((nx, ny, nz))
              if use_colors:
                  colors.append([float(bits[3]) / 255, float(bits[4]) / 255, float(bits[5]) / 255])
 
@@ -248,7 +260,8 @@ def load(operator, context, filepath):
 
 def save(operator, context, filepath,
     global_matrix = None,
-    use_colors = False):
+    use_colors = False,
+    use_normals = False):
     # Export the selected mesh
     APPLY_MODIFIERS = True # TODO: Make this configurable
     if global_matrix is None:
@@ -288,13 +301,19 @@ def save(operator, context, filepath,
 
     if use_colors:
         fp.write('COFF\n')
+    elif use_normals:
+        fp.write('NOFF\n')
     else:
         fp.write('OFF\n')
 
     fp.write('%d %d 0\n' % (len(verts), len(facets)))
 
     for i, vert in enumerate(mesh.vertices):
-        fp.write('%.16f %.16f %.16f' % vert.co[:])
+        if use_normals:
+            # TODO: Find a prettier way
+            fp.write('%.16f %.16f %.16f %.16f %.16f %.16f' % (vert.co[0], vert.co[1], vert.co[2], vert.normal[0], vert.normal[1], vert.normal[2]))
+        else:
+            fp.write('%.16f %.16f %.16f' % vert.co[:])
         if use_colors:
             fp.write(' %d %d %d 255' % vertex_colors[i])
         fp.write('\n')
