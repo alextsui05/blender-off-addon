@@ -185,7 +185,13 @@ def load(operator, context, filepath):
     first_line = file.readline().rstrip()
     use_colors = (first_line == 'COFF')
     colors = []
-    vcount, fcount, ecount = [int(x) for x in file.readline().split()]
+    
+    # handle blank lines after the first line
+    line = file.readline()
+    while line.isspace():
+        line = file.readline()
+
+    vcount, fcount, ecount = [int(x) for x in line.split()]
     verts = []
     facets = []
     edges = []
