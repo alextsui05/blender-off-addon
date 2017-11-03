@@ -28,6 +28,11 @@ Blender Wiki page: http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/I
 
 # Changelog
 
+## 0.3.1 / 2017-11-03
+
+- Allow blank line after the first line of the header (a common occurrence)
+- Allow blank lines between the header and the data
+
 ## 0.3.0 / 2015-06-01
 
 - Handle loading edges and faces with more than 3 sides properly
