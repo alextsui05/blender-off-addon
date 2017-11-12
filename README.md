@@ -12,6 +12,14 @@ Quickstart
 6. Check the checkbox by the OFF addon to enable it.
 7. Now you should have new import/export menu items to work with OFF files.
 
+Data ordering
+-----
+This plugin uses the following convention on the data ordering inside OFF files:
+```
+vx vy vz [nx ny nz] [cr cg cb [ca]]
+```
+where v* are the vertex coordinates, n* the normal coordinates and c* the color components and brackets denote optional content.
+
 License
 -----
 

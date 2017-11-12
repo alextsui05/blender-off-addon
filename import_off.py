@@ -56,7 +56,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
     bl_label = "Import OFF Mesh"
     filename_ext = ".off"
     filter_glob = StringProperty(
-        default="*.off;*.noff;*.coff",
+        default="*.off;*.noff;*.coff;*.ncoff",
         options={'HIDDEN'},
     )
 
@@ -182,19 +182,20 @@ def unregister():
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
+# ordering: vx vy vz nx ny nz r g b a
 def load(operator, context, filepath):
     # Parse mesh from OFF file
-    # TODO: Add support for NOFF and COFF
     filepath = os.fsencode(filepath)
     file = open(filepath, 'r')
     first_line = file.readline().rstrip()
     use_colors = (first_line == 'COFF')
     use_normals = (first_line == 'NOFF')
-    colors = []
+    use_colors_and_normals = (first_line == 'NCOFF')
     vcount, fcount, ecount = [int(x) for x in file.readline().split()]
     verts = []
     facets = []
     edges = []
+    colors = []
     normals = []
     i=0;
     while i<vcount:
@@ -207,12 +208,35 @@ def load(operator, context, filepath):
              py = bits[1]
              pz = bits[2]
              if use_normals:
+                 assert len(bits) == 6
                  nx = bits[3]
                  ny = bits[4]
                  nz = bits[5]
                  normals.append((nx, ny, nz))
-             if use_colors:
-                 colors.append([float(bits[3]) / 255, float(bits[4]) / 255, float(bits[5]) / 255])
+             elif use_colors:
+                 cr = float(bits[3]) / 255
+                 cg = float(bits[4]) / 255
+                 cb = float(bits[5]) / 255
+                 if len(bits) == 6:
+                     ca = 255
+                 else:
+                     assert len(bits) == 7
+                     ca = float(bits[6]) / 255
+                 colors.append((cr, cg, cb, ca))
+             elif use_colors_and_normals:
+                 nx = bits[3]
+                 ny = bits[4]
+                 nz = bits[5]
+                 normals.append((nx, ny, nz))
+                 cr = float(bits[6]) / 255
+                 cg = float(bits[7]) / 255
+                 cb = float(bits[8]) / 255
+                 if len(bits) == 9:
+                     ca = 255
+                 else:
+                     assert len(bits) == 10
+                     ca = float(bits[9]) / 255
+                 colors.append([cr, cg, cb, ca])
 
         except ValueError:
             i=i+1
@@ -254,7 +278,7 @@ def load(operator, context, filepath):
         color_data = mesh.vertex_colors.new()
         for i, facet in enumerate(mesh.polygons):
             for j, vidx in enumerate(facet.vertices):
-                color_data.data[3*i + j].color = colors[vidx]
+                color_data.data[3*i + j].color = colors[vidx][:-1]
 
     return mesh
 
@@ -299,7 +323,9 @@ def save(operator, context, filepath,
     filepath = os.fsencode(filepath)
     fp = open(filepath, 'w')
 
-    if use_colors:
+    if use_colors and use_normals:
+        fp.write('NCOFF\n')
+    elif use_colors:
         fp.write('COFF\n')
     elif use_normals:
         fp.write('NOFF\n')
@@ -309,13 +335,14 @@ def save(operator, context, filepath,
     fp.write('%d %d 0\n' % (len(verts), len(facets)))
 
     for i, vert in enumerate(mesh.vertices):
-        if use_normals:
-            # TODO: Find a prettier way
-            fp.write('%.16f %.16f %.16f %.16f %.16f %.16f' % (vert.co[0], vert.co[1], vert.co[2], vert.normal[0], vert.normal[1], vert.normal[2]))
-        else:
-            fp.write('%.16f %.16f %.16f' % vert.co[:])
-        if use_colors:
+        fp.write('%.16f %.16f %.16f' % vert.co[:])
+        if use_colors and use_normals:
+            fp.write(' %.16f %.16f %.16f' % vert.normal[:])
             fp.write(' %d %d %d 255' % vertex_colors[i])
+        elif use_colors:
+            fp.write(' %d %d %d 255' % vertex_colors[i])
+        elif use_normals:
+            fp.write(' %.16f %.16f %.16f' % vert.normal[:])
         fp.write('\n')
 
     #for facet in facets:
