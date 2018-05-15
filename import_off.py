@@ -186,9 +186,9 @@ def load(operator, context, filepath):
     use_colors = (first_line == 'COFF')
     colors = []
     
-    # handle blank lines after the first line
+    # handle blank and comment lines after the first line
     line = file.readline()
-    while line.isspace():
+    while line.isspace() or line[0]=='#':
         line = file.readline()
 
     vcount, fcount, ecount = [int(x) for x in line.split()]
