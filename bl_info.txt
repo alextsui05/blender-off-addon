@@ -7,7 +7,7 @@ bl_info = {
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui, Mateusz Kłoczko",
     "version": (0, 3, 1),
-    "blender": (2, 74, 0),
+    "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"
