@@ -267,15 +267,18 @@ def save(operator, context, filepath,
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
     scene = context.scene
-    obj = scene.objects.active
-    mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+    #obj = scene.objects.active
+    obj = bpy.context.window.scene.objects[0]
+    bpy.context.view_layer.objects.active = obj    # 'obj' is the active object now
+    #mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+    mesh = obj.to_mesh()
 
     # Apply the inverse transformation
     obj_mat = obj.matrix_world
-    mesh.transform(global_matrix * obj_mat)
+    mesh.transform(global_matrix @ obj_mat)
 
     verts = mesh.vertices[:]
-    facets = [ f for f in mesh.tessfaces ]
+    facets = [ f for f in mesh.polygons ]
     # Collect colors by vertex id
     colors = False
     vertex_colors = None
@@ -284,7 +287,7 @@ def save(operator, context, filepath,
     if colors:
         colors = colors.data
         vertex_colors = {}
-        for i, facet in enumerate(mesh.tessfaces):
+        for i, facet in enumerate(mesh.polygons):
             color = colors[i]
             color = color.color1[:], color.color2[:], color.color3[:], color.color4[:]
             for j, vidx in enumerate(facet.vertices):
@@ -313,7 +316,7 @@ def save(operator, context, filepath,
         fp.write('\n')
 
     #for facet in facets:
-    for i, facet in enumerate(mesh.tessfaces):
+    for i, facet in enumerate(mesh.polygons):
         fp.write('%d' % len(facet.vertices))
         for vid in facet.vertices:
             fp.write(' %d' % vid)
