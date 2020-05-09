@@ -1,6 +1,6 @@
 # Blender OFF Addon
 
-This addon will add the ability to import and export ascii OFF mesh files in Blender.
+This addon will add the ability to import and export ascii OFF mesh files in Blender 2.7.x.
 
 # Quickstart
 
@@ -53,4 +53,4 @@ To have your script show up in the Add-Ons panel, it needs to:
 
     be in the addons/ directory
     contain a dictionary called "bl_info"
-    define register() / unregister() functions. 
+    define register() / unregister() functions.
