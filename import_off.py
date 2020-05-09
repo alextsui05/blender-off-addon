@@ -42,7 +42,7 @@ bl_info = {
     "name": "OFF format",
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui, Mateusz Kłoczko",
-    "version": (0, 3),
+    "version": (0, 4, 0),
     "blender": (2, 82, 7),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
