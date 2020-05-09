@@ -43,7 +43,7 @@ bl_info = {
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui, Mateusz Kłoczko",
     "version": (0, 3),
-    "blender": (2, 80, 0),
+    "blender": (2, 82, 7),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"
@@ -100,14 +100,12 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
 
         scene = bpy.context.scene
         obj = bpy.data.objects.new(mesh.name, mesh)
-        #scene.objects.link(obj)
         scene.collection.objects.link(obj)
-        scene.objects.active = obj
-        obj.select = True
 
         obj.matrix_world = global_matrix
 
-        #scene.update()
+        layer = bpy.context.view_layer
+        layer.update()
 
         return {'FINISHED'}
 
@@ -263,14 +261,10 @@ def save(operator, context, filepath,
     global_matrix = None,
     use_colors = False):
     # Export the selected mesh
-    APPLY_MODIFIERS = True # TODO: Make this configurable
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
     scene = context.scene
-    #obj = scene.objects.active
-    obj = bpy.context.window.scene.objects[0]
-    bpy.context.view_layer.objects.active = obj    # 'obj' is the active object now
-    #mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+    obj = bpy.context.view_layer.objects.active
     mesh = obj.to_mesh()
 
     # Apply the inverse transformation
