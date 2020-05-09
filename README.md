@@ -1,16 +1,20 @@
 # Blender OFF Addon
 
-This addon will add the ability to import and export ascii OFF mesh files in Blender.
+This addon will add the ability to import and export ascii OFF mesh files in Blender 2.8x.
 
 # Quickstart
 
 1. Clone this project.
 2. Open Blender.
-3. Go to File > User Preferences... > Addons tab.
-4. On the bottom, click Install from File...
-5. Select the import_off.py from this project.
+3. Go to Edit > Preferences... > Addons tab.
+4. On the top right, click Install... button.
+5. Select the `import_off.py` from this project.
 6. Check the checkbox by the OFF addon to enable it.
 7. Now you should have new import/export menu items to work with OFF files.
+
+# Older Blender versions
+
+If you are using Blender 2.7x or older, please use the `blender/2.7` branch.
 
 # License + Contributing
 
@@ -20,13 +24,17 @@ This addon is licensed under Apache 2.0.
 
 Please feel free to open an issue/pull request about any problems you have or
 features you'd want to have. I'll do my best to be responsive, but if not,
-feel free to ping me with a mention, or tweet at me.
+feel free to ping me an email or tweet at me.
 
 # Links
 
 Blender Wiki page: http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/Object_File_Format_%28.off%29
 
 # Changelog
+
+## 0.4.0 / 2020-05-10
+
+- Support breaking API changes in Blender 2.8x release.
 
 ## 0.3.1 / 2017-11-03
 
@@ -53,4 +61,4 @@ To have your script show up in the Add-Ons panel, it needs to:
 
     be in the addons/ directory
     contain a dictionary called "bl_info"
-    define register() / unregister() functions. 
+    define register() / unregister() functions.

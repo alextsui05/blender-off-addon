@@ -42,8 +42,8 @@ bl_info = {
     "name": "OFF format",
     "description": "Import-Export OFF, Import/export simple OFF mesh.",
     "author": "Alex Tsui, Mateusz Kłoczko",
-    "version": (0, 3),
-    "blender": (2, 74, 0),
+    "version": (0, 4, 0),
+    "blender": (2, 82, 7),
     "location": "File > Import-Export",
     "warning": "", # used for warning icon and text in addons panel
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.5/Py/"
@@ -100,13 +100,12 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
 
         scene = bpy.context.scene
         obj = bpy.data.objects.new(mesh.name, mesh)
-        scene.objects.link(obj)
-        scene.objects.active = obj
-        obj.select = True
+        scene.collection.objects.link(obj)
 
         obj.matrix_world = global_matrix
 
-        scene.update()
+        layer = bpy.context.view_layer
+        layer.update()
 
         return {'FINISHED'}
 
@@ -167,15 +166,21 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(ExportOFF.bl_idname, text="OFF Mesh (.off)")
 
+classes = (
+    ImportOFF,
+    ExportOFF,
+)
+    
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
-
+    for c in classes:
+        bpy.utils.register_class(c)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
 def load(operator, context, filepath):
     # Parse mesh from OFF file
@@ -256,19 +261,18 @@ def save(operator, context, filepath,
     global_matrix = None,
     use_colors = False):
     # Export the selected mesh
-    APPLY_MODIFIERS = True # TODO: Make this configurable
     if global_matrix is None:
         global_matrix = mathutils.Matrix()
     scene = context.scene
-    obj = scene.objects.active
-    mesh = obj.to_mesh(scene, APPLY_MODIFIERS, 'PREVIEW')
+    obj = bpy.context.view_layer.objects.active
+    mesh = obj.to_mesh()
 
     # Apply the inverse transformation
     obj_mat = obj.matrix_world
-    mesh.transform(global_matrix * obj_mat)
+    mesh.transform(global_matrix @ obj_mat)
 
     verts = mesh.vertices[:]
-    facets = [ f for f in mesh.tessfaces ]
+    facets = [ f for f in mesh.polygons ]
     # Collect colors by vertex id
     colors = False
     vertex_colors = None
@@ -277,7 +281,7 @@ def save(operator, context, filepath,
     if colors:
         colors = colors.data
         vertex_colors = {}
-        for i, facet in enumerate(mesh.tessfaces):
+        for i, facet in enumerate(mesh.polygons):
             color = colors[i]
             color = color.color1[:], color.color2[:], color.color3[:], color.color4[:]
             for j, vidx in enumerate(facet.vertices):
@@ -306,7 +310,7 @@ def save(operator, context, filepath,
         fp.write('\n')
 
     #for facet in facets:
-    for i, facet in enumerate(mesh.tessfaces):
+    for i, facet in enumerate(mesh.polygons):
         fp.write('%d' % len(facet.vertices))
         for vid in facet.vertices:
             fp.write(' %d' % vid)
