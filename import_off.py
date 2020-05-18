@@ -188,6 +188,9 @@ def load(operator, context, filepath):
     filepath = os.fsencode(filepath)
     file = open(filepath, 'r')
     first_line = file.readline().rstrip()
+    while first_line.split()[0] == '#':
+        first_line = file.readline().rstrip()
+        
     use_colors = (first_line == 'COFF')
     colors = []
     
@@ -306,7 +309,7 @@ def save(operator, context, filepath,
     for i, vert in enumerate(mesh.vertices):
         fp.write('%.16f %.16f %.16f' % vert.co[:])
         if use_colors:
-            fp.write(' %d %d %d 255' % vertex_colors[i])
+            fp.write(' %d %d %d 1.0' % vertex_colors[i])
         fp.write('\n')
 
     #for facet in facets:
