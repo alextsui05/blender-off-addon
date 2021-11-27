@@ -60,7 +60,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
     )
 
-    axis_forward = EnumProperty(
+    axis_forward: EnumProperty(
             name="Forward",
             items=(('X', "X Forward", ""),
                    ('Y', "Y Forward", ""),
@@ -71,7 +71,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
                    ),
             default='Y',
             )
-    axis_up = EnumProperty(
+    axis_up: EnumProperty(
             name="Up",
             items=(('X', "X Up", ""),
                    ('Y', "Y Up", ""),
@@ -86,7 +86,7 @@ class ImportOFF(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         #from . import import_off
 
-        keywords = self.as_keywords(ignore=('axis_forward',
+        keywords: self.as_keywords(ignore=('axis_forward',
             'axis_up',
             'filter_glob',
         ))
@@ -120,7 +120,7 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
     check_extension = True
     filename_ext = ".off"
 
-    axis_forward = EnumProperty(
+    axis_forward: EnumProperty(
             name="Forward",
             items=(('X', "X Forward", ""),
                    ('Y', "Y Forward", ""),
@@ -131,7 +131,7 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
                    ),
             default='Y',
             )
-    axis_up = EnumProperty(
+    axis_up: EnumProperty(
             name="Up",
             items=(('X', "X Up", ""),
                    ('Y', "Y Up", ""),
@@ -142,7 +142,7 @@ class ExportOFF(bpy.types.Operator, ExportHelper):
                    ),
             default='Z',
             )
-    use_colors = BoolProperty(
+    use_colors: BoolProperty(
             name="Vertex Colors",
             description="Export the active vertex color layer",
             default=False,
